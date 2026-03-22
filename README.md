@@ -6,8 +6,12 @@ API RESTful construida con Python y Flask.
 
 ```bash
 # Crear entorno virtual
-python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
+python -m venv .venv
+# En Windows
+.venv\Scripts\activate
+
+# En Mac/Linux
+source .venv/bin/activate 
 
 # Instalar dependencias
 pip install -r requirements.txt
