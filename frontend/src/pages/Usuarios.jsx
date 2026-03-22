@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getUsuarios, crearUsuario, actualizarUsuario, eliminarUsuario, getTareas, crearTarea, actualizarTarea, eliminarTarea } from '../services/api';
+import Modal from '../components/Modal';
 
 export default function Usuarios() {
     const [usuarios, setUsuarios] = useState([]);
@@ -12,6 +13,10 @@ export default function Usuarios() {
     const [toast, setToast] = useState(null);
     const [tareas, setTareas] = useState({});
     const [tareasVisibles, setTareasVisibles] = useState({});
+    const [modalUsuario, setModalUsuario] = useState(false);
+    const [editNombre, setEditNombre] = useState('');
+    const [editEmail, setEditEmail] = useState('');
+    const [editId, setEditId] = useState(null); 
 
     useEffect(() => {
         cargarUsuarios(pagina, search);
@@ -91,6 +96,28 @@ export default function Usuarios() {
         mostrarToast('Tarea eliminada');
     }
 
+
+
+
+    function abrirEditarUsuario(u) {
+        setEditId(u.id);
+        setEditNombre(u.nombre);
+        setEditEmail(u.email);
+        setModalUsuario(true);
+    }
+
+    async function handleActualizarUsuario() {
+        try {
+            await actualizarUsuario(editId, { nombre: editNombre, email: editEmail });
+            setModalUsuario(false);
+            mostrarToast('Usuario actualizado');
+            cargarUsuarios(pagina, search);
+        } catch (e) {
+            mostrarToast(e.response?.data?.error || 'Error al actualizar', 'error');
+        }
+    }
+
+
     return (
         <div>
             {/* Toast */}
@@ -131,6 +158,7 @@ export default function Usuarios() {
                                 <div className="usuario-email">{u.email}</div>
                             </div>
                             <div className="usuario-actions">
+                                <button className="btn-warning btn-sm" onClick={() => abrirEditarUsuario(u)}>✏️ Editar</button>
                                 <button className="btn-primary btn-sm" onClick={() => toggleTareas(u.id)}>📋 Tareas</button>
                                 <button className="btn-danger btn-sm" onClick={() => handleEliminarUsuario(u.id)}>🗑️ Eliminar</button>
                             </div>
@@ -150,6 +178,7 @@ export default function Usuarios() {
                                 ))}
                             </div>
                         )}
+                        
                     </div>
                 ))}
 
@@ -160,6 +189,14 @@ export default function Usuarios() {
                     <button className="btn-primary btn-sm" onClick={() => setPagina(p => p + 1)} disabled={pagina === paginas}>Siguiente →</button>
                 </div>
             </div>
+            {modalUsuario && (
+                <Modal titulo="✏️ Editar usuario" onCerrar={() => setModalUsuario(false)} onGuardar={handleActualizarUsuario}>
+                    <div className="form-row" style={{ flexDirection: 'column' }}>
+                        <input value={editNombre} onChange={e => setEditNombre(e.target.value)} placeholder="Nombre" />
+                        <input value={editEmail} onChange={e => setEditEmail(e.target.value)} placeholder="Email" type="email" />
+                    </div>
+                </Modal>
+            )}             
         </div>
     );
 }

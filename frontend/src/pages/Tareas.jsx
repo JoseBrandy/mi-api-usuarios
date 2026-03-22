@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { getUsuarios, getTareas, crearTarea, actualizarTarea, eliminarTarea } from '../services/api';
+import Modal from '../components/Modal';
 
 export default function Tareas() {
     const [search, setSearch] = useState('');
@@ -11,6 +12,11 @@ export default function Tareas() {
     const [toast, setToast] = useState(null);
     const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
     const searchTimeout = useRef(null);
+
+    const [modalTarea, setModalTarea] = useState(false);
+    const [editTareaId, setEditTareaId] = useState(null);
+    const [editTitulo, setEditTitulo] = useState('');
+    const [editDescripcion, setEditDescripcion] = useState('');
 
     useEffect(() => {
         if (search.length < 2) { setUsuarios([]); return; }
@@ -78,6 +84,28 @@ export default function Tareas() {
             cargarTareas();
         } catch (e) {
             mostrarToast('Error al eliminar', 'error');
+        }
+    }
+
+
+    function abrirEditarTarea(tarea) {
+        setEditTareaId(tarea.id);
+        setEditTitulo(tarea.titulo);
+        setEditDescripcion(tarea.descripcion || '');
+        setModalTarea(true);
+    }
+
+    async function handleActualizarTarea() {
+        try {
+            await actualizarTarea(usuarioSeleccionado.id, editTareaId, {
+                titulo: editTitulo,
+                descripcion: editDescripcion
+            });
+            setModalTarea(false);
+            mostrarToast('Tarea actualizada');
+            cargarTareas();
+        } catch (e) {
+            mostrarToast('Error al actualizar tarea', 'error');
         }
     }
 
@@ -164,6 +192,7 @@ export default function Tareas() {
                                     {t.descripcion && <div style={{ fontSize: '0.8rem', color: '#8892b0', marginTop: 4 }}>{t.descripcion}</div>}
                                 </div>
                                 <div style={{ display: 'flex', gap: 6 }}>
+                                    <button className="btn-warning btn-sm" onClick={() => abrirEditarTarea(t)}>✏️</button>
                                     <button className="btn-success btn-sm" onClick={() => handleToggleCompletada(t)}>
                                         {t.completada ? '↩️' : '✅'}
                                     </button>
@@ -173,6 +202,14 @@ export default function Tareas() {
                         ))
                     )}
                 </div>
+            )}
+            {modalTarea && (
+                <Modal titulo="✏️ Editar tarea" onCerrar={() => setModalTarea(false)} onGuardar={handleActualizarTarea}>
+                    <div className="form-row" style={{ flexDirection: 'column' }}>
+                        <input value={editTitulo} onChange={e => setEditTitulo(e.target.value)} placeholder="Título" />
+                        <input value={editDescripcion} onChange={e => setEditDescripcion(e.target.value)} placeholder="Descripción" />
+                    </div>
+                </Modal>
             )}
         </div>
     );
