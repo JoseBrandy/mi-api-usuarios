@@ -284,6 +284,16 @@
             </div>
         </div>
 
+        <!-- Logs de actividad -->
+        <div class="card">
+            <h2>📋 Actividad reciente</h2>
+            <button type="button" class="btn-primary" onclick="getLogs()"
+                style="margin-bottom: 16px;">Actualizar</button>
+            <div id="lista-logs">
+                <p class="empty">Cargando logs...</p>
+            </div>
+        </div>
+
     </div>
 
     <!-- Modal editar usuario -->
@@ -542,6 +552,21 @@
 
         // Iniciar
         getUsuarios();
+        async function getLogs() {
+            const res = await fetch(`${API}/logs`);
+            const logs = await res.json();
+            const lista = document.getElementById('lista-logs');
+            if (logs.length === 0) { lista.innerHTML = '<p class="empty">No hay actividad</p>'; return; }
+            lista.innerHTML = logs.map(l => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding: 8px 12px; border-bottom: 1px solid #f0f2f5;">
+                    <span style="font-size:0.9rem;">${l.descripcion}</span>
+                    <span style="font-size:0.8rem; color:#999;">${l.fecha}</span>
+                </div>
+            `).join('');
+        }
+
+        // Cargar logs al iniciar
+        getLogs();
     </script>
 
 </body>
