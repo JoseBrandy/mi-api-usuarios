@@ -4,6 +4,7 @@ from src.config.database import db, init_db
 from src.routes.usuarios_routes import usuarios_bp
 from src.routes.tareas_routes import tareas_bp
 from src.routes.categorias_routes import categorias_bp
+from src.routes.logs_routes import logs_bp
 from src.middlewares.error_handler import register_error_handlers
 
 app = Flask(__name__)
@@ -18,6 +19,7 @@ CORS(app)
 app.register_blueprint(usuarios_bp)
 app.register_blueprint(tareas_bp)
 app.register_blueprint(categorias_bp)
+app.register_blueprint(logs_bp)
 
 # Registrar manejadores de error
 register_error_handlers(app)

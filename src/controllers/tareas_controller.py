@@ -2,6 +2,7 @@ from flask import jsonify, request
 from src.models.tarea_model import Tarea
 from src.models.usuario_model import Usuario
 from src.config.database import db
+from src.config.logger import registrar_log
 
 def get_tareas_por_usuario(usuario_id):
     usuario = Usuario.query.get(usuario_id)
@@ -44,6 +45,7 @@ def crear_tarea(usuario_id):
 
     db.session.add(nueva_tarea)
     db.session.commit()
+    registrar_log('crear_tarea', f'Tarea "{nueva_tarea.titulo}" creada para usuario {usuario.nombre}')
 
     return jsonify(nueva_tarea.to_dict()), 201
 
@@ -63,6 +65,7 @@ def actualizar_tarea(usuario_id, tarea_id):
     tarea.completada = data.get('completada', tarea.completada)
 
     db.session.commit()
+    registrar_log('actualizar_tarea', f'Tarea "{tarea.titulo}" actualizada')
 
     return jsonify(tarea.to_dict()), 200
 
@@ -74,5 +77,6 @@ def eliminar_tarea(usuario_id, tarea_id):
 
     db.session.delete(tarea)
     db.session.commit()
+    registrar_log('eliminar_tarea', f'Tarea "{tarea.titulo}" eliminada')
 
     return jsonify({'mensaje': 'Tarea eliminada correctamente'}), 200

@@ -2,7 +2,7 @@ from flask import jsonify, request
 from sqlalchemy import or_
 from src.models.usuario_model import Usuario
 from src.config.database import db
-
+from src.config.logger import registrar_log
 
 def get_usuarios():
     page = request.args.get('page', 1, type=int)
@@ -10,6 +10,7 @@ def get_usuarios():
     search = request.args.get('search', '', type=str)
 
     query = Usuario.query
+
     if search:
         query = query.filter(
             or_(
@@ -38,7 +39,7 @@ def get_usuario_por_id(id):
 
 def crear_usuario():
     data = request.get_json()
-    
+
     if not data:
         return jsonify({'error': 'No se enviaron datos'}), 400
 
@@ -52,6 +53,7 @@ def crear_usuario():
 
     db.session.add(nuevo_usuario)
     db.session.commit()
+    registrar_log('crear_usuario', f'Usuario {nuevo_usuario.nombre} creado')
 
     return jsonify(nuevo_usuario.to_dict()), 201
 
@@ -73,6 +75,7 @@ def actualizar_usuario(id):
     usuario.email = data['email']
 
     db.session.commit()
+    registrar_log('actualizar_usuario', f'Usuario {usuario.nombre} actualizado')
 
     return jsonify(usuario.to_dict()), 200
 
@@ -84,5 +87,6 @@ def eliminar_usuario(id):
 
     db.session.delete(usuario)
     db.session.commit()
+    registrar_log('eliminar_usuario', f'Usuario {usuario.nombre} eliminado')
 
     return jsonify({'mensaje': 'Usuario eliminado correctamente'}), 200
