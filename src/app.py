@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from src.config.database import db, init_db
 from src.routes.usuarios_routes import usuarios_bp
 from src.routes.tareas_routes import tareas_bp
@@ -9,6 +10,9 @@ app = Flask(__name__)
 
 # Inicializar base de datos
 init_db(app)
+
+# Habilitar CORS
+CORS(app)
 
 # Registrar rutas
 app.register_blueprint(usuarios_bp)

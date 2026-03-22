@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Usuarios</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        h1 { color: #333; }
+        h2 { color: #555; margin-top: 30px; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        ul { list-style: none; padding: 0; }
+        li { padding: 10px; border: 1px solid #ddd; margin: 5px 0; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>🧑‍💻 API de Usuarios</h1>
+
+    <!-- Usuarios -->
+    <h2>Usuarios</h2>
+    <button onclick="getUsuarios()">Ver usuarios</button>
+    <ul id="lista-usuarios"></ul>
+
+    <h2>Crear usuario</h2>
+    <input type="text" id="nombre" placeholder="Nombre">
+    <input type="email" id="email" placeholder="Email">
+    <button onclick="crearUsuario()">Crear</button>
+
+    <!-- Tareas -->
+    <h2>Tareas de un usuario</h2>
+    <input type="number" id="usuario-id" placeholder="ID de usuario">
+    <button onclick="getTareas()">Ver tareas</button>
+    <ul id="lista-tareas"></ul>
+
+    <h2>Crear tarea</h2>
+    <input type="number" id="tarea-usuario-id" placeholder="ID de usuario">
+    <input type="text" id="titulo" placeholder="Titulo">
+    <input type="text" id="descripcion" placeholder="Descripcion">
+    <button onclick="crearTarea()">Crear tarea</button>
+
+    <script>
+        const API = 'http://localhost:3000';
+
+        async function getUsuarios() {
+            const res = await fetch(`${API}/usuarios`);
+            const data = await res.json();
+            const lista = document.getElementById('lista-usuarios');
+            lista.innerHTML = data.map(u => `<li>ID: ${u.id} | ${u.nombre} | ${u.email}</li>`).join('');
+        }
+
+        async function crearUsuario() {
+            const nombre = document.getElementById('nombre').value;
+            const email = document.getElementById('email').value;
+            const res = await fetch(`${API}/usuarios`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, email })
+            });
+            const data = await res.json();
+            alert(`Usuario creado: ${data.nombre}`);
+            getUsuarios();
+        }
+
+        async function getTareas() {
+            const id = document.getElementById('usuario-id').value;
+            const res = await fetch(`${API}/usuarios/${id}/tareas`);
+            const data = await res.json();
+            const lista = document.getElementById('lista-tareas');
+            lista.innerHTML = data.map(t => `<li>${t.titulo} | ${t.completada ? '✅' : '⏳'}</li>`).join('');
+        }
+
+        async function crearTarea() {
+            const usuarioId = document.getElementById('tarea-usuario-id').value;
+            const titulo = document.getElementById('titulo').value;
+            const descripcion = document.getElementById('descripcion').value;
+            const res = await fetch(`${API}/usuarios/${usuarioId}/tareas`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ titulo, descripcion })
+            });
+            const data = await res.json();
+            alert(`Tarea creada: ${data.titulo}`);
+        }
+    </script>
+</body>
+</html>
