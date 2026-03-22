@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { getUsuarios, getTareas, crearTarea, actualizarTarea, eliminarTarea } from '../services/api';
+import { getCategorias, agregarCategoriaATarea, eliminarCategoriaDetarea } from '../services/api';
 import Modal from '../components/Modal';
 
 export default function Tareas() {
@@ -17,6 +18,10 @@ export default function Tareas() {
     const [editTareaId, setEditTareaId] = useState(null);
     const [editTitulo, setEditTitulo] = useState('');
     const [editDescripcion, setEditDescripcion] = useState('');
+
+    const [categorias, setCategorias] = useState([]);
+    const [modalCategorias, setModalCategorias] = useState(false);
+    const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
 
     useEffect(() => {
         if (search.length < 2) { setUsuarios([]); return; }
@@ -109,6 +114,45 @@ export default function Tareas() {
         }
     }
 
+
+
+    useEffect(() => {
+        cargarCategorias();
+    }, []);
+
+    async function cargarCategorias() {
+        const res = await getCategorias();
+        setCategorias(res.data);
+    }
+
+    function abrirModalCategorias(tarea) {
+        setTareaSeleccionada(tarea);
+        setModalCategorias(true);
+    }
+
+    async function handleAgregarCategoria(categoriaId) {
+        try {
+            const res = await agregarCategoriaATarea(tareaSeleccionada.id, categoriaId);
+            setTareaSeleccionada(res.data);
+            mostrarToast('Categoría agregada');
+            cargarTareas();
+        } catch (e) {
+            mostrarToast(e.response?.data?.error || 'Error al agregar', 'error');
+        }
+    }
+
+    async function handleEliminarCategoria(categoriaId) {
+        try {
+            const res = await eliminarCategoriaDetarea(tareaSeleccionada.id, categoriaId);
+            setTareaSeleccionada(res.data);
+            mostrarToast('Categoría eliminada');
+            cargarTareas();
+        } catch (e) {
+            mostrarToast('Error al eliminar categoría', 'error');
+        }
+    }
+
+
     return (
         <div>
             {toast && (
@@ -196,6 +240,7 @@ export default function Tareas() {
                                     <button className="btn-success btn-sm" onClick={() => handleToggleCompletada(t)}>
                                         {t.completada ? '↩️' : '✅'}
                                     </button>
+                                    <button className="btn-warning btn-sm" onClick={() => abrirModalCategorias(t)}>🏷️</button>
                                     <button className="btn-danger btn-sm" onClick={() => handleEliminarTarea(t.id)}>🗑️</button>
                                 </div>
                             </div>
@@ -208,6 +253,31 @@ export default function Tareas() {
                     <div className="form-row" style={{ flexDirection: 'column' }}>
                         <input value={editTitulo} onChange={e => setEditTitulo(e.target.value)} placeholder="Título" />
                         <input value={editDescripcion} onChange={e => setEditDescripcion(e.target.value)} placeholder="Descripción" />
+                    </div>
+                </Modal>
+            )}
+
+            {modalCategorias && tareaSeleccionada && (
+                <Modal titulo={`🏷️ Categorías de "${tareaSeleccionada.titulo}"`} onCerrar={() => setModalCategorias(false)} onGuardar={() => setModalCategorias(false)}>
+                    <div>
+                        <p style={{ color: '#8892b0', fontSize: '0.9rem', marginBottom: 12 }}>Categorías asignadas:</p>
+                        {tareaSeleccionada.categorias.length === 0 ? (
+                            <p className="empty">Sin categorías</p>
+                        ) : (
+                            tareaSeleccionada.categorias.map(c => (
+                                <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: '#1d3557', borderRadius: 6, marginBottom: 6 }}>
+                                    <span style={{ color: '#ccd6f6', fontSize: '0.9rem' }}>🏷️ {c.nombre}</span>
+                                    <button className="btn-danger btn-sm" onClick={() => handleEliminarCategoria(c.id)}>✕</button>
+                                </div>
+                            ))
+                        )}
+                        <p style={{ color: '#8892b0', fontSize: '0.9rem', margin: '12px 0 8px' }}>Agregar categoría:</p>
+                        {categorias.filter(c => !tareaSeleccionada.categorias.find(tc => tc.id === c.id)).map(c => (
+                            <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: '#0d1b2a', borderRadius: 6, marginBottom: 6 }}>
+                                <span style={{ color: '#8892b0', fontSize: '0.9rem' }}>{c.nombre}</span>
+                                <button className="btn-success btn-sm" onClick={() => handleAgregarCategoria(c.id)}>+ Agregar</button>
+                            </div>
+                        ))}
                     </div>
                 </Modal>
             )}

@@ -2,6 +2,7 @@ from flask import jsonify, request
 from src.models.categoria_model import Categoria
 from src.models.tarea_model import Tarea
 from src.config.database import db
+from src.config.logger import registrar_log
 
 def get_categorias():
     categorias = Categoria.query.all()
@@ -41,6 +42,26 @@ def agregar_categoria_a_tarea(tarea_id, categoria_id):
     db.session.commit()
 
     return jsonify(tarea.to_dict()), 200
+
+def actualizar_categoria(id):
+    data = request.get_json()
+
+    if not data:
+        return jsonify({'error': 'No se enviaron datos'}), 400
+
+    categoria = Categoria.query.get(id)
+
+    if categoria is None:
+        return jsonify({'error': 'Categoria no encontrada'}), 404
+
+    categoria.nombre = data.get('nombre', categoria.nombre)
+    categoria.descripcion = data.get('descripcion', categoria.descripcion)
+
+    db.session.commit()
+    registrar_log('actualizar_categoria', f'Categoria "{categoria.nombre}" actualizada')
+
+    return jsonify(categoria.to_dict()), 200
+
 
 def eliminar_categoria_de_tarea(tarea_id, categoria_id):
     tarea = Tarea.query.get(tarea_id)

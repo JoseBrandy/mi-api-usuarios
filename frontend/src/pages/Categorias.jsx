@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
-import { getLogs } from '../services/api';
+import { getCategorias, crearCategoria, actualizarCategoria, eliminarCategoria } from '../services/api';
+import Modal from '../components/Modal';
 
 export default function Categorias() {
     const [categorias, setCategorias] = useState([]);
     const [nombre, setNombre] = useState('');
     const [descripcion, setDescripcion] = useState('');
     const [toast, setToast] = useState(null);
+    const [modalCategoria, setModalCategoria] = useState(false);
+    const [editId, setEditId] = useState(null);
+    const [editNombre, setEditNombre] = useState('');
+    const [editDescripcion, setEditDescripcion] = useState('');
 
     useEffect(() => {
         cargarCategorias();
@@ -13,9 +18,8 @@ export default function Categorias() {
 
     async function cargarCategorias() {
         try {
-            const res = await fetch('http://localhost:3000/categorias');
-            const data = await res.json();
-            setCategorias(data);
+            const res = await getCategorias();
+            setCategorias(res.data);
         } catch (e) {
             mostrarToast('Error al cargar categorías', 'error');
         }
@@ -29,29 +33,41 @@ export default function Categorias() {
     async function handleCrearCategoria() {
         if (!nombre) { mostrarToast('El nombre es obligatorio', 'error'); return; }
         try {
-            const res = await fetch('http://localhost:3000/categorias', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nombre, descripcion })
-            });
-            const data = await res.json();
-            if (!res.ok) { mostrarToast(data.error, 'error'); return; }
+            await crearCategoria({ nombre, descripcion });
             setNombre('');
             setDescripcion('');
             mostrarToast('Categoría creada');
             cargarCategorias();
         } catch (e) {
-            mostrarToast('Error al crear categoría', 'error');
+            mostrarToast(e.response?.data?.error || 'Error al crear', 'error');
         }
     }
 
     async function handleEliminarCategoria(id) {
         try {
-            await fetch(`http://localhost:3000/categorias/${id}`, { method: 'DELETE' });
+            await eliminarCategoria(id);
             mostrarToast('Categoría eliminada');
             cargarCategorias();
         } catch (e) {
             mostrarToast('Error al eliminar', 'error');
+        }
+    }
+
+    function abrirEditarCategoria(c) {
+        setEditId(c.id);
+        setEditNombre(c.nombre);
+        setEditDescripcion(c.descripcion || '');
+        setModalCategoria(true);
+    }
+
+    async function handleActualizarCategoria() {
+        try {
+            await actualizarCategoria(editId, { nombre: editNombre, descripcion: editDescripcion });
+            setModalCategoria(false);
+            mostrarToast('Categoría actualizada');
+            cargarCategorias();
+        } catch (e) {
+            mostrarToast(e.response?.data?.error || 'Error al actualizar', 'error');
         }
     }
 
@@ -91,6 +107,7 @@ export default function Categorias() {
                                     {c.descripcion && <div className="usuario-email">{c.descripcion}</div>}
                                 </div>
                                 <div className="usuario-actions">
+                                    <button className="btn-warning btn-sm" onClick={() => abrirEditarCategoria(c)}>✏️ Editar</button>
                                     <button className="btn-danger btn-sm" onClick={() => handleEliminarCategoria(c.id)}>🗑️ Eliminar</button>
                                 </div>
                             </div>
@@ -98,6 +115,16 @@ export default function Categorias() {
                     ))
                 )}
             </div>
+
+            {/* Modal editar */}
+            {modalCategoria && (
+                <Modal titulo="✏️ Editar categoría" onCerrar={() => setModalCategoria(false)} onGuardar={handleActualizarCategoria}>
+                    <div className="form-row" style={{ flexDirection: 'column' }}>
+                        <input value={editNombre} onChange={e => setEditNombre(e.target.value)} placeholder="Nombre" />
+                        <input value={editDescripcion} onChange={e => setEditDescripcion(e.target.value)} placeholder="Descripción" />
+                    </div>
+                </Modal>
+            )}
         </div>
     );
 }
