@@ -5,3 +5,5 @@ venv/
 .venv/
 instance/
 .vscode/
+frontend/node_modules/
+frontend/dist/
