@@ -36,8 +36,9 @@ src/
 
 ## 🔑 Variables de entorno
 
-Crear un archivo `.env` en la raíz con:
+Crear un archivo `.env` en la raíz basándote en `.env.example`:
+```
+cp .env.example .env
+```
 
-```
-PORT=3000
-```
+Luego completá los valores en el `.env`.
