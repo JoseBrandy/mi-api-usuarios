@@ -1,6 +1,7 @@
 from flask import Flask
 from src.config.database import db, init_db
 from src.routes.usuarios_routes import usuarios_bp
+from src.routes.tareas_routes import tareas_bp
 from src.middlewares.error_handler import register_error_handlers
 
 app = Flask(__name__)
@@ -10,6 +11,7 @@ init_db(app)
 
 # Registrar rutas
 app.register_blueprint(usuarios_bp)
+app.register_blueprint(tareas_bp)
 
 # Registrar manejadores de error
 register_error_handlers(app)
