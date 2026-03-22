@@ -5,84 +5,317 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API Usuarios</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
-        h1 { color: #333; }
-        h2 { color: #555; margin-top: 30px; }
-        input { padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 4px; }
-        button { padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
-        button:hover { background: #0056b3; }
-        ul { list-style: none; padding: 0; }
-        li { padding: 10px; border: 1px solid #ddd; margin: 5px 0; border-radius: 4px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; }
+
+        header { background: #2c3e50; color: white; padding: 20px 40px; }
+        header h1 { font-size: 1.5rem; }
+
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+
+        .card { background: white; border-radius: 10px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .card h2 { margin-bottom: 16px; font-size: 1.1rem; color: #2c3e50; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
+
+        .form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+        input { padding: 10px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem; flex: 1; min-width: 150px; }
+        input:focus { outline: none; border-color: #3498db; }
+
+        button { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: background 0.2s; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-primary:hover { background: #2980b9; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-success { background: #2ecc71; color: white; }
+        .btn-success:hover { background: #27ae60; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn-warning:hover { background: #e67e22; }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
+        .usuario-item { border: 1px solid #eee; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+        .usuario-header { display: flex; justify-content: space-between; align-items: center; }
+        .usuario-info { font-weight: 600; }
+        .usuario-email { color: #777; font-size: 0.9rem; }
+        .usuario-actions { display: flex; gap: 6px; }
+
+        .tareas-container { margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f2f5; display: none; }
+        .tarea-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8f9fa; border-radius: 6px; margin-bottom: 6px; }
+        .tarea-titulo { font-size: 0.9rem; }
+        .tarea-estado { font-size: 0.8rem; margin-left: 8px; }
+        .completada { text-decoration: line-through; color: #aaa; }
+
+        #toast-container { position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+        .toast { padding: 14px 20px; border-radius: 8px; color: white; font-size: 0.9rem; opacity: 1; transition: opacity 0.5s; pointer-events: none; }
+        .toast.success { background: #2ecc71; }
+        .toast.error { background: #e74c3c; }
+        .toast.fade { opacity: 0; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 500; justify-content: center; align-items: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; border-radius: 10px; padding: 24px; width: 100%; max-width: 400px; }
+        .modal-content h3 { margin-bottom: 16px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+        .empty { color: #aaa; font-size: 0.9rem; text-align: center; padding: 12px; }
     </style>
 </head>
 <body>
+
+<header>
     <h1>🧑‍💻 API de Usuarios</h1>
+</header>
 
-    <!-- Usuarios -->
-    <h2>Usuarios</h2>
-    <button onclick="getUsuarios()">Ver usuarios</button>
-    <ul id="lista-usuarios"></ul>
+<div class="container">
 
-    <h2>Crear usuario</h2>
-    <input type="text" id="nombre" placeholder="Nombre">
-    <input type="email" id="email" placeholder="Email">
-    <button onclick="crearUsuario()">Crear</button>
+    <!-- Crear usuario -->
+    <div class="card">
+        <h2>➕ Crear usuario</h2>
+        <div class="form-row">
+            <input type="text" id="nombre" placeholder="Nombre">
+            <input type="email" id="email" placeholder="Email">
+            <button type="button" class="btn-primary" onclick="crearUsuario()">Crear</button>
+        </div>
+    </div>
 
-    <!-- Tareas -->
-    <h2>Tareas de un usuario</h2>
-    <input type="number" id="usuario-id" placeholder="ID de usuario">
-    <button onclick="getTareas()">Ver tareas</button>
-    <ul id="lista-tareas"></ul>
+    <!-- Lista de usuarios -->
+    <div class="card">
+        <h2>👥 Usuarios</h2>
+        <div id="lista-usuarios"><p class="empty">Cargando usuarios...</p></div>
+    </div>
 
-    <h2>Crear tarea</h2>
-    <input type="number" id="tarea-usuario-id" placeholder="ID de usuario">
-    <input type="text" id="titulo" placeholder="Titulo">
-    <input type="text" id="descripcion" placeholder="Descripcion">
-    <button onclick="crearTarea()">Crear tarea</button>
+</div>
 
-    <script>
-        const API = 'http://localhost:3000';
+<!-- Modal editar usuario -->
+<div class="modal" id="modal-usuario">
+    <div class="modal-content">
+        <h3>✏️ Editar usuario</h3>
+        <input type="hidden" id="edit-usuario-id">
+        <div class="form-row" style="flex-direction: column;">
+            <input type="text" id="edit-nombre" placeholder="Nombre">
+            <input type="email" id="edit-email" placeholder="Email">
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn-primary" onclick="cerrarModal('modal-usuario')">Cancelar</button>
+            <button type="button" class="btn-success" onclick="guardarUsuario()">Guardar</button>
+        </div>
+    </div>
+</div>
 
-        async function getUsuarios() {
-            const res = await fetch(`${API}/usuarios`);
-            const data = await res.json();
-            const lista = document.getElementById('lista-usuarios');
-            lista.innerHTML = data.map(u => `<li>ID: ${u.id} | ${u.nombre} | ${u.email}</li>`).join('');
-        }
+<!-- Modal editar tarea -->
+<div class="modal" id="modal-tarea">
+    <div class="modal-content">
+        <h3>✏️ Editar tarea</h3>
+        <input type="hidden" id="edit-tarea-id">
+        <input type="hidden" id="edit-tarea-usuario-id">
+        <div class="form-row" style="flex-direction: column;">
+            <input type="text" id="edit-titulo" placeholder="Título">
+            <input type="text" id="edit-descripcion" placeholder="Descripción">
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn-primary" onclick="cerrarModal('modal-tarea')">Cancelar</button>
+            <button type="button" class="btn-success" onclick="guardarTarea()">Guardar</button>
+        </div>
+    </div>
+</div>
 
-        async function crearUsuario() {
-            const nombre = document.getElementById('nombre').value;
-            const email = document.getElementById('email').value;
-            const res = await fetch(`${API}/usuarios`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nombre, email })
-            });
-            const data = await res.json();
-            alert(`Usuario creado: ${data.nombre}`);
-            getUsuarios();
-        }
+<!-- Toast container separado del resto del DOM -->
+<div id="toast-container"></div>
 
-        async function getTareas() {
-            const id = document.getElementById('usuario-id').value;
-            const res = await fetch(`${API}/usuarios/${id}/tareas`);
-            const data = await res.json();
-            const lista = document.getElementById('lista-tareas');
-            lista.innerHTML = data.map(t => `<li>${t.titulo} | ${t.completada ? '✅' : '⏳'}</li>`).join('');
-        }
+<script>
+    const API = 'http://localhost:3000';
 
-        async function crearTarea() {
-            const usuarioId = document.getElementById('tarea-usuario-id').value;
-            const titulo = document.getElementById('titulo').value;
-            const descripcion = document.getElementById('descripcion').value;
-            const res = await fetch(`${API}/usuarios/${usuarioId}/tareas`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ titulo, descripcion })
-            });
-            const data = await res.json();
-            alert(`Tarea creada: ${data.titulo}`);
-        }
-    </script>
+    // Toast - crea un nuevo elemento cada vez, no reutiliza uno que puede ser destruido
+    function showToast(msg, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = msg;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.add('fade');
+            setTimeout(() => toast.remove(), 500);
+        }, 3000);
+    }
+
+    // Modales
+    function abrirModal(id) { document.getElementById(id).classList.add('show'); }
+    function cerrarModal(id) { document.getElementById(id).classList.remove('show'); }
+
+    // Obtener usuarios
+    async function getUsuarios() {
+        const res = await fetch(`${API}/usuarios`);
+        const usuarios = await res.json();
+        const lista = document.getElementById('lista-usuarios');
+        if (usuarios.length === 0) { lista.innerHTML = '<p class="empty">No hay usuarios</p>'; return; }
+        lista.innerHTML = usuarios.map(u => `
+            <div class="usuario-item" id="usuario-${u.id}">
+                <div class="usuario-header">
+                    <div>
+                        <div class="usuario-info">${u.nombre}</div>
+                        <div class="usuario-email">${u.email}</div>
+                    </div>
+                    <div class="usuario-actions">
+                        <button type="button" class="btn-primary btn-sm" onclick="toggleTareas(${u.id})">📋 Tareas</button>
+                        <button type="button" class="btn-warning btn-sm" onclick="abrirEditarUsuario(${u.id}, '${u.nombre}', '${u.email}')">✏️ Editar</button>
+                        <button type="button" class="btn-danger btn-sm" onclick="eliminarUsuario(${u.id})">🗑️ Eliminar</button>
+                    </div>
+                </div>
+                <div class="tareas-container" id="tareas-${u.id}">
+                    <div class="form-row" style="margin-bottom: 10px;">
+                        <input type="text" id="titulo-${u.id}" placeholder="Nueva tarea">
+                        <input type="text" id="desc-${u.id}" placeholder="Descripción (opcional)">
+                        <button type="button" class="btn-success btn-sm" onclick="crearTarea(${u.id})">➕ Agregar</button>
+                    </div>
+                    <div id="lista-tareas-${u.id}"></div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Crear usuario
+    async function crearUsuario() {
+        const nombre = document.getElementById('nombre').value.trim();
+        const email = document.getElementById('email').value.trim();
+        if (!nombre || !email) { showToast('Completá todos los campos', 'error'); return; }
+        const res = await fetch(`${API}/usuarios`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre, email })
+        });
+        const data = await res.json();
+        if (!res.ok) { showToast(data.error, 'error'); return; }
+        document.getElementById('nombre').value = '';
+        document.getElementById('email').value = '';
+        showToast(`Usuario ${data.nombre} creado`);
+        getUsuarios();
+    }
+
+    // Eliminar usuario
+    async function eliminarUsuario(id) {
+        const res = await fetch(`${API}/usuarios/${id}`, { method: 'DELETE' });
+        if (!res.ok) { showToast('Error al eliminar', 'error'); return; }
+        showToast('Usuario eliminado');
+        getUsuarios();
+    }
+
+    // Abrir modal editar usuario
+    function abrirEditarUsuario(id, nombre, email) {
+        document.getElementById('edit-usuario-id').value = id;
+        document.getElementById('edit-nombre').value = nombre;
+        document.getElementById('edit-email').value = email;
+        abrirModal('modal-usuario');
+    }
+
+    // Guardar usuario editado
+    async function guardarUsuario() {
+        const id = document.getElementById('edit-usuario-id').value;
+        const nombre = document.getElementById('edit-nombre').value.trim();
+        const email = document.getElementById('edit-email').value.trim();
+        const res = await fetch(`${API}/usuarios/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre, email })
+        });
+        const data = await res.json();
+        if (!res.ok) { showToast(data.error, 'error'); return; }
+        cerrarModal('modal-usuario');
+        showToast('Usuario actualizado');
+        getUsuarios();
+    }
+
+    // Toggle tareas
+    async function toggleTareas(usuarioId) {
+        const container = document.getElementById(`tareas-${usuarioId}`);
+        if (container.style.display === 'block') { container.style.display = 'none'; return; }
+        container.style.display = 'block';
+        await getTareas(usuarioId);
+    }
+
+    // Obtener tareas
+    async function getTareas(usuarioId) {
+        const res = await fetch(`${API}/usuarios/${usuarioId}/tareas`);
+        const tareas = await res.json();
+        const lista = document.getElementById(`lista-tareas-${usuarioId}`);
+        if (tareas.length === 0) { lista.innerHTML = '<p class="empty">No hay tareas</p>'; return; }
+        lista.innerHTML = tareas.map(t => `
+            <div class="tarea-item">
+                <span class="tarea-titulo ${t.completada ? 'completada' : ''}">${t.titulo} <span class="tarea-estado">${t.completada ? '✅' : '⏳'}</span></span>
+                <div style="display:flex; gap:6px;">
+                    <button type="button" class="btn-warning btn-sm" onclick="abrirEditarTarea(${t.id}, ${usuarioId}, '${t.titulo}', '${t.descripcion || ''}')">✏️</button>
+                    <button type="button" class="btn-success btn-sm" onclick="toggleCompletada(${usuarioId}, ${t.id}, ${t.completada})">${t.completada ? '↩️' : '✅'}</button>
+                    <button type="button" class="btn-danger btn-sm" onclick="eliminarTarea(${usuarioId}, ${t.id})">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Crear tarea
+    async function crearTarea(usuarioId) {
+        const titulo = document.getElementById(`titulo-${usuarioId}`).value.trim();
+        const descripcion = document.getElementById(`desc-${usuarioId}`).value.trim();
+        if (!titulo) { showToast('El título es obligatorio', 'error'); return; }
+        const res = await fetch(`${API}/usuarios/${usuarioId}/tareas`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ titulo, descripcion })
+        });
+        const data = await res.json();
+        if (!res.ok) { showToast(data.error, 'error'); return; }
+        document.getElementById(`titulo-${usuarioId}`).value = '';
+        document.getElementById(`desc-${usuarioId}`).value = '';
+        showToast('Tarea creada');
+        getTareas(usuarioId);
+    }
+
+    // Eliminar tarea
+    async function eliminarTarea(usuarioId, tareaId) {
+        const res = await fetch(`${API}/usuarios/${usuarioId}/tareas/${tareaId}`, { method: 'DELETE' });
+        if (!res.ok) { showToast('Error al eliminar', 'error'); return; }
+        showToast('Tarea eliminada');
+        getTareas(usuarioId);
+    }
+
+    // Toggle completada
+    async function toggleCompletada(usuarioId, tareaId, completada) {
+        const res = await fetch(`${API}/usuarios/${usuarioId}/tareas/${tareaId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ completada: !completada })
+        });
+        if (!res.ok) { showToast('Error al actualizar', 'error'); return; }
+        showToast(completada ? 'Tarea pendiente' : 'Tarea completada');
+        getTareas(usuarioId);
+    }
+
+    // Abrir modal editar tarea
+    function abrirEditarTarea(tareaId, usuarioId, titulo, descripcion) {
+        document.getElementById('edit-tarea-id').value = tareaId;
+        document.getElementById('edit-tarea-usuario-id').value = usuarioId;
+        document.getElementById('edit-titulo').value = titulo;
+        document.getElementById('edit-descripcion').value = descripcion;
+        abrirModal('modal-tarea');
+    }
+
+    // Guardar tarea editada
+    async function guardarTarea() {
+        const tareaId = document.getElementById('edit-tarea-id').value;
+        const usuarioId = document.getElementById('edit-tarea-usuario-id').value;
+        const titulo = document.getElementById('edit-titulo').value.trim();
+        const descripcion = document.getElementById('edit-descripcion').value.trim();
+        const res = await fetch(`${API}/usuarios/${usuarioId}/tareas/${tareaId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ titulo, descripcion })
+        });
+        const data = await res.json();
+        if (!res.ok) { showToast(data.error, 'error'); return; }
+        cerrarModal('modal-tarea');
+        showToast('Tarea actualizada');
+        getTareas(usuarioId);
+    }
+
+    // Iniciar
+    getUsuarios();
+</script>
+
 </body>
 </html>
