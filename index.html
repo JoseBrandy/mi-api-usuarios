@@ -273,7 +273,12 @@
 
         <!-- Lista de usuarios -->
         <div class="card">
-            <h2>👥 Usuarios <span id="total-usuarios" style="font-size: 0.85rem; color: #999; font-weight: normal;"></span></h2>
+            <h2>👥 Usuarios <span id="total-usuarios"
+                    style="font-size: 0.85rem; color: #999; font-weight: normal;"></span></h2>
+            <div style="margin-bottom: 16px;">
+                <input type="text" id="search-usuarios" placeholder="🔍 Buscar por nombre o email..."
+                    oninput="buscarUsuarios()" style="max-width: 400px;">
+            </div>
             <div id="lista-usuarios">
                 <p class="empty">Cargando usuarios...</p>
             </div>
@@ -333,6 +338,14 @@
             }, 3000);
         }
 
+        let searchTimeout;
+        function buscarUsuarios() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                getUsuarios(1);
+            }, 400);
+        }
+
         // Modales
         function abrirModal(id) { document.getElementById(id).classList.add('show'); }
         function cerrarModal(id) { document.getElementById(id).classList.remove('show'); }
@@ -343,7 +356,8 @@
 
         async function getUsuarios(page = 1) {
             paginaActual = page;
-            const res = await fetch(`${API}/usuarios?page=${page}&per_page=${porPagina}`);
+            const search = document.getElementById('search-usuarios').value.trim();
+            const res = await fetch(`${API}/usuarios?page=${page}&per_page=${porPagina}&search=${search}`);
             const data = await res.json();
             const lista = document.getElementById('lista-usuarios');
             document.getElementById('total-usuarios').textContent = `(${data.total} en total)`;

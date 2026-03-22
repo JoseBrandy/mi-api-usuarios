@@ -1,12 +1,24 @@
 from flask import jsonify, request
+from sqlalchemy import or_
 from src.models.usuario_model import Usuario
 from src.config.database import db
+
 
 def get_usuarios():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 5, type=int)
+    search = request.args.get('search', '', type=str)
 
-    paginacion = Usuario.query.paginate(page=page, per_page=per_page, error_out=False)
+    query = Usuario.query
+    if search:
+        query = query.filter(
+            or_(
+                Usuario.nombre.ilike(f'%{search}%'),
+                Usuario.email.ilike(f'%{search}%')
+            )
+        )
+
+    paginacion = query.paginate(page=page, per_page=per_page, error_out=False)
 
     return jsonify({
         'usuarios': [u.to_dict() for u in paginacion.items],
