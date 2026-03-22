@@ -3,8 +3,18 @@ from src.models.usuario_model import Usuario
 from src.config.database import db
 
 def get_usuarios():
-    usuarios = Usuario.query.all()
-    return jsonify([u.to_dict() for u in usuarios]), 200
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 5, type=int)
+
+    paginacion = Usuario.query.paginate(page=page, per_page=per_page, error_out=False)
+
+    return jsonify({
+        'usuarios': [u.to_dict() for u in paginacion.items],
+        'total': paginacion.total,
+        'pagina': paginacion.page,
+        'por_pagina': paginacion.per_page,
+        'paginas': paginacion.pages
+    }), 200
 
 def get_usuario_por_id(id):
     usuario = Usuario.query.get(id)
